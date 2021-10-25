@@ -45,5 +45,96 @@ Mean otter length is 36.9 inches $\pm$ 9.3 (mean $\pm$ sd, n=8) with a 95% confi
 
 #### Now, using in-line referencing
 
-Mean otter length is `r round(otter_ci$estimate, 1)` inches
+Mean otter length is `r round(otter_ci$estimate, 1)` inches with a 95% confidence interval of [`r round(otter_ci$conf.int[1], 1)`, `r round(otter_ci$conf.int[2], 1)`] inches.
 
+## Part 2: Two sample t-tests
+
+### Example 1
+
+Make two mock samples and ask the question: do we have sufficient evidence to make us reject the null hypothesis that these samples were drawn from populations with the same mean?
+
+```{r}
+# make my mock samples
+
+oak_trees <- c(20, 19, 24, 28, 34, 12, 15, 25)
+
+pine_trees <- c(39, 26, 20, 30, 37, 22, 19, 18)
+
+# Two-sample t-test
+tree_t <- t.test(oak_trees, pine_trees)
+
+#null hyopthesis: mean heights are the same
+
+#i.e: trees are drawn from populations with the same mean height
+```
+
+if these are drawn from populations of the same mean height, there's a 28.7% chance of taking a random samples from each population and finding the same mean by chance. i.e: 30 out of 100 times I could get results that are at least this different.
+
+
+the mean heights of oak and pine trees were (X +- Y) and (X +- Y), respectively, and the difference was not significant (t(`r tree_t$paramater`) = `r round(tree_t$statistic, 1)`, p = `r tree_t$p.value`).
+
+there's and 'x%' chance of getting samples that are at least this different from populations with the same mean.
+
+## Part 3: another t-test with cars data
+
+using the `mpg` data set
+
+### Take a look at the data 
+
+```{r}
+compact_suv <- mpg %>% 
+  filter(class %in% c("compact", "suv"))
+
+#check for remaining levels(
+  unique(compact_suv$class)
+
+  
+```
+
+Create a histogram of city mileage (cty) faceted by class starting from compact_suv.
+
+```{r}
+ggplot(data = compact_suv, aes(x = cty))+
+  geom_histogram(bins = 12) +
+  facet_wrap(~class)
+
+ggplot(data = compact_suv, aes(sample = cty)) +
+geom_qq() +
+  facet_wrap(~ class)
+```
+
+find some summary statistics for each group
+
+```{r}
+car_stats <- compact_suv %>% 
+  group_by(class) %>% 
+  summarize(
+    mean_city = round(mean(cty), 2),
+    sd_city = round(sd(cty), 2),
+    sample_size = n()
+  )
+
+car_stats
+```
+
+the t.test() function really wants vectors of things. Use the `pull()` function to pull out a vector from a data frame.
+
+```{r}
+compact_sample <- compact_suv %>% 
+  filter(class == "compact") %>% 
+  pull(cty)
+```
+
+
+```{r}
+suv_sample <- compact_suv %>% 
+  filter(class == "suv") %>% 
+  pull(cty)
+```
+
+mean city gas mileages for suvs and compact cars are the same = null hypothesis 
+
+```{r}
+t.test(compact_sample, suv_sample)
+```
+there's a very very small chance of taking a random sample from each population and finding the same mean by chance. we reject the null hypothesis. There is a significant difference in mean city gas mileage for suv's and compact cars (t(df)) = t-statistic, p<0.001
